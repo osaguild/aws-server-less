@@ -84,7 +84,7 @@ def update_data(event, context):
         
         response = table.update_item(
             Key={"id": id},
-            UpdateExpression=f"SET param_1 = :param_1",
+            UpdateExpression=f"SET param_2 = :param_2",
             ExpressionAttributeValues={
                 ':param_1': 'updated',
             }
