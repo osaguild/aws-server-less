@@ -16,7 +16,7 @@ class ServerLessApp(core.Stack):
 
         # dynamoDB
         table = ddb.Table(
-            self, "server-less-table",
+            self, "ServerLessTable",
             partition_key=ddb.Attribute(
                 name="id",
                 type=ddb.AttributeType.STRING
@@ -27,10 +27,11 @@ class ServerLessApp(core.Stack):
 
         # s3 bucket
         bucket = s3.Bucket(
-            self, "server-less-bucket",
+            self, "ServerLessBucket",
             website_index_document="index.html",
             public_read_access=True,
-            removal_policy=core.RemovalPolicy.DESTROY
+            removal_policy=core.RemovalPolicy.DESTROY,
+            bucket_name="server-less-app.osaguild.com"
         )
 
         # s3 deploy
@@ -97,7 +98,8 @@ class ServerLessApp(core.Stack):
                 # todo: restrict origins and methods
                 allow_origins=apigw.Cors.ALL_ORIGINS,
                 allow_methods=apigw.Cors.ALL_METHODS,
-            )
+            ),
+            rest_api_name="server-less-api.osaguild.com"
         )
 
         api_api = api.root.add_resource("api")
