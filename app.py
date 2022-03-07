@@ -6,6 +6,10 @@ from aws_cdk import (
     aws_lambda as _lambda,
     aws_ssm as ssm,
     aws_apigateway as apigw,
+    aws_cloudfront as cloudfront,
+    aws_certificatemanager as acm,
+    aws_route53 as r53,
+    aws_route53_targets as r53_targets,
 )
 import os
 
@@ -30,8 +34,7 @@ class ServerLessApp(core.Stack):
             self, "ServerLessBucket",
             website_index_document="index.html",
             public_read_access=True,
-            removal_policy=core.RemovalPolicy.DESTROY,
-            bucket_name="server-less-app.osaguild.com"
+            removal_policy=core.RemovalPolicy.DESTROY
         )
 
         # s3 deploy
@@ -42,6 +45,57 @@ class ServerLessApp(core.Stack):
             sources=[s3_deploy.Source.asset("./assets")],
             # todo: meaning of retain_on_delete
             retain_on_delete=False,
+        )
+
+        # hosted zone
+        hosted_zone=r53.HostedZone.from_lookup(
+            self,"HostedZone",
+            domain_name="osaguild.com"
+        )
+
+        # cloud front
+        front = cloudfront.CloudFrontWebDistribution(
+            self, "ServerLessFront",
+            default_root_object="/index.html",
+            viewer_protocol_policy=cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
+            http_version=cloudfront.HttpVersion.HTTP2,
+            price_class=cloudfront.PriceClass.PRICE_CLASS_ALL,
+            origin_configs=[
+                cloudfront.SourceConfiguration(
+                    s3_origin_source=cloudfront.S3OriginConfig(
+                        s3_bucket_source=bucket
+                    ),
+                    behaviors=[
+                        cloudfront.Behavior(
+                            is_default_behavior=True,
+                        )
+                    ],
+                )
+            ],
+            viewer_certificate=cloudfront.ViewerCertificate.from_acm_certificate(
+                acm.DnsValidatedCertificate(
+                    self, "Certificate",
+                    domain_name="*.osaguild.com",
+                    subject_alternative_names=[
+                        "*.osaguild.com"
+                    ],
+                    hosted_zone=hosted_zone,
+                    region="us-east-1"
+                ),
+                aliases=["server-less-app.osaguild.com"],
+                security_policy=cloudfront.SecurityPolicyProtocol.TLS_V1_2_2019,
+                ssl_method=cloudfront.SSLMethod.SNI
+            ),
+        )
+
+        # A record
+        a_record = r53.ARecord(
+            self, "ARecord",
+            record_name="server-less-app.osaguild.com",
+            zone=hosted_zone,
+            target=r53.RecordTarget.from_alias(
+                r53_targets.CloudFrontTarget(front)
+            )
         )
 
         # common params for lambda
@@ -98,8 +152,7 @@ class ServerLessApp(core.Stack):
                 # todo: restrict origins and methods
                 allow_origins=apigw.Cors.ALL_ORIGINS,
                 allow_methods=apigw.Cors.ALL_METHODS,
-            ),
-            rest_api_name="server-less-api.osaguild.com"
+            )
         )
 
         api_api = api.root.add_resource("api")
