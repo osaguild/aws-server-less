@@ -11,23 +11,20 @@ sample for aws server less architecture
 
 ### How to use s3
  - access url
-   - `{ServerLessApp.BucketUrl}`
+   - `https://server-less-app.osaguild.com/index.html`
 
 ### How to use API
- - set url to env
-   - `export ENDPOINT_URL={ServerLessApp.ServerLessApiEndpoint}`
-   - `echo $ENDPOINT_URL`
  - select_data 
-   - `https GET "${ENDPOINT_URL}api"`
+   - `https GET "server-less-api.osaguild.com/api"`
  - create_data
 ```commandline
-https POST "${ENDPOINT_URL}api" \
+https POST "server-less-api.osaguild.com/api" \
 param_1="data1" \
 param_2="data2" \
 param_3="data3" \
 param_4="data4"
 ```
  - request patch
-   - `https POST "${ENDPOINT_URL}api/{id}"`
+   - `https POST "server-less-api.osaguild.com/api/{id}"`
  - requst delete
-   - `https DELETE "${ENDPOINT_URL}api/{id}"`
+   - `https DELETE "server-less-api.osaguild.com/api/{id}"`
