@@ -7,6 +7,7 @@ aws-cdk.aws-cloudfront==1.100.0
 aws-cdk.aws-certificatemanager==1.100.0
 aws-cdk.aws-route53==1.100.0
 aws-cdk.aws-route53-targets==1.100.0
+aws-cdk.aws-iam==1.100.0
 boto3
 requests
 httpie

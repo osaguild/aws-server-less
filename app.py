@@ -10,6 +10,7 @@ from aws_cdk import (
     aws_certificatemanager as acm,
     aws_route53 as r53,
     aws_route53_targets as r53_targets,
+    aws_iam as iam,
 )
 import os
 
@@ -33,9 +34,26 @@ class ServerLessApp(core.Stack):
         bucket = s3.Bucket(
             self, "ServerLessBucket",
             website_index_document="index.html",
-            public_read_access=True,
+            access_control=s3.BucketAccessControl.PRIVATE,
             removal_policy=core.RemovalPolicy.DESTROY
         )
+
+        # s3 access identity
+        identity = cloudfront.OriginAccessIdentity(
+            self, "OriginAccessIdentity",
+            comment="s3 access identity",
+        )
+
+        # s3 policy statement
+        policy = iam.PolicyStatement(
+            actions=['s3:GetObject'],
+            effect=iam.Effect.ALLOW,
+            principals=[identity.grant_principal],
+            resources=[bucket.bucket_arn + "/*"],
+        )
+
+        # attach
+        bucket.add_to_resource_policy(policy)
 
         # s3 deploy
         s3_deploy.BucketDeployment(
@@ -74,7 +92,8 @@ class ServerLessApp(core.Stack):
             origin_configs=[
                 cloudfront.SourceConfiguration(
                     s3_origin_source=cloudfront.S3OriginConfig(
-                        s3_bucket_source=bucket
+                        s3_bucket_source=bucket,
+                        origin_access_identity=identity
                     ),
                     behaviors=[
                         cloudfront.Behavior(
