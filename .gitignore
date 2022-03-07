@@ -1,2 +1,4 @@
 cdk.out/
 .env/
+cdk.context.json
+.idea/
