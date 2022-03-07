@@ -53,6 +53,17 @@ class ServerLessApp(core.Stack):
             domain_name="osaguild.com"
         )
 
+        # certificate
+        certificate=acm.DnsValidatedCertificate(
+            self, "Certificate",
+            domain_name="*.osaguild.com",
+            subject_alternative_names=[
+                "*.osaguild.com"
+            ],
+            hosted_zone=hosted_zone,
+            region="us-east-1"
+        )
+
         # cloud front
         front = cloudfront.CloudFrontWebDistribution(
             self, "ServerLessFront",
@@ -73,24 +84,16 @@ class ServerLessApp(core.Stack):
                 )
             ],
             viewer_certificate=cloudfront.ViewerCertificate.from_acm_certificate(
-                acm.DnsValidatedCertificate(
-                    self, "Certificate",
-                    domain_name="*.osaguild.com",
-                    subject_alternative_names=[
-                        "*.osaguild.com"
-                    ],
-                    hosted_zone=hosted_zone,
-                    region="us-east-1"
-                ),
+                certificate,
                 aliases=["server-less-app.osaguild.com"],
                 security_policy=cloudfront.SecurityPolicyProtocol.TLS_V1_2_2019,
                 ssl_method=cloudfront.SSLMethod.SNI
             ),
         )
 
-        # A record
-        a_record = r53.ARecord(
-            self, "ARecord",
+        # A record for server-less-app
+        app_a_record = r53.ARecord(
+            self, "AppARecord",
             record_name="server-less-app.osaguild.com",
             zone=hosted_zone,
             target=r53.RecordTarget.from_alias(
@@ -152,6 +155,20 @@ class ServerLessApp(core.Stack):
                 # todo: restrict origins and methods
                 allow_origins=apigw.Cors.ALL_ORIGINS,
                 allow_methods=apigw.Cors.ALL_METHODS,
+            ),
+            domain_name=apigw.DomainNameOptions(
+                domain_name="server-less-api.osaguild.com",
+                certificate=certificate
+            )
+        )
+
+        # A record for server-less-api
+        api_a_record = r53.ARecord(
+            self, "ApiARecord",
+            record_name="server-less-api.osaguild.com",
+            zone=hosted_zone,
+            target=r53.RecordTarget.from_alias(
+                r53_targets.ApiGateway(api)
             )
         )
 
