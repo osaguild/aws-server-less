@@ -59,8 +59,8 @@ class ServerLessApp(core.Stack):
         s3_deploy.BucketDeployment(
             self, "BucketDeployment",
             destination_bucket=bucket,
-            # deploy dir is ./assets
-            sources=[s3_deploy.Source.asset("./assets")],
+            # deploy dir is ./dist
+            sources=[s3_deploy.Source.asset("./dist")],
             # todo: meaning of retain_on_delete
             retain_on_delete=False,
         )
