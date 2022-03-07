@@ -85,7 +85,7 @@ class ServerLessApp(core.Stack):
         # cloud front
         front = cloudfront.CloudFrontWebDistribution(
             self, "ServerLessFront",
-            default_root_object="/index.html",
+            default_root_object="index.html",
             viewer_protocol_policy=cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
             http_version=cloudfront.HttpVersion.HTTP2,
             price_class=cloudfront.PriceClass.PRICE_CLASS_ALL,
