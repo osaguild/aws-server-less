@@ -104,7 +104,7 @@ class ServerLessApp(core.Stack):
             ],
             viewer_certificate=cloudfront.ViewerCertificate.from_acm_certificate(
                 certificate,
-                aliases=["server-less-app.osaguild.com"],
+                aliases=["server-less.osaguild.com"],
                 security_policy=cloudfront.SecurityPolicyProtocol.TLS_V1_2_2019,
                 ssl_method=cloudfront.SSLMethod.SNI
             ),
@@ -113,7 +113,7 @@ class ServerLessApp(core.Stack):
         # A record for server-less-app
         app_a_record = r53.ARecord(
             self, "AppARecord",
-            record_name="server-less-app.osaguild.com",
+            record_name="server-less.osaguild.com",
             zone=hosted_zone,
             target=r53.RecordTarget.from_alias(
                 r53_targets.CloudFrontTarget(front)
@@ -176,7 +176,7 @@ class ServerLessApp(core.Stack):
                 allow_methods=apigw.Cors.ALL_METHODS,
             ),
             domain_name=apigw.DomainNameOptions(
-                domain_name="server-less-api.osaguild.com",
+                domain_name="api.osaguild.com",
                 certificate=certificate
             )
         )
@@ -184,35 +184,36 @@ class ServerLessApp(core.Stack):
         # A record for server-less-api
         api_a_record = r53.ARecord(
             self, "ApiARecord",
-            record_name="server-less-api.osaguild.com",
+            record_name="api.osaguild.com",
             zone=hosted_zone,
             target=r53.RecordTarget.from_alias(
                 r53_targets.ApiGateway(api)
             )
         )
 
-        api_api = api.root.add_resource("api")
+        api_v1 = api.root.add_resource("v1")
+        api_v1_serverless = api_v1.add_resource("server-less")
 
         # add GET method to /api
-        api_api.add_method(
+        api_v1_serverless.add_method(
             "GET",
             apigw.LambdaIntegration(select_data_lambda)
         )
         # add POST method to /api
-        api_api.add_method(
+        api_v1_serverless.add_method(
             "POST",
             apigw.LambdaIntegration(create_data_lambda)
         )
 
-        api_api_id = api_api.add_resource("{id}")
+        api_v1_serverless_id = api_v1_serverless.add_resource("{id}")
 
         # add POST method to /api/{id}
-        api_api_id.add_method(
+        api_v1_serverless_id.add_method(
             "POST",
             apigw.LambdaIntegration(update_data_lambda)
         )
         # add DELETE method to /api/{id}
-        api_api_id.add_method(
+        api_v1_serverless_id.add_method(
             "DELETE",
             apigw.LambdaIntegration(delete_data_lambda)
         )

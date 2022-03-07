@@ -11,20 +11,20 @@ sample for aws server less architecture
 
 ### How to use s3
  - access url
-   - `https://server-less-app.osaguild.com/index.html`
+   - `https://server-less.osaguild.com`
 
 ### How to use API
  - select_data 
-   - `https GET "server-less-api.osaguild.com/api"`
+   - `https GET "api.osaguild.com/v1/server-less"`
  - create_data
 ```commandline
-https POST "server-less-api.osaguild.com/api" \
+https POST "api.osaguild.com/v1/server-less" \
 param_1="data1" \
 param_2="data2" \
 param_3="data3" \
 param_4="data4"
 ```
  - request patch
-   - `https POST "server-less-api.osaguild.com/api/{id}"`
+   - `https POST "api.osaguild.com/v1/server-less/{id}"`
  - requst delete
-   - `https DELETE "server-less-api.osaguild.com/api/{id}"`
+   - `https DELETE "api.osaguild.com/v1/server-less/{id}"`
