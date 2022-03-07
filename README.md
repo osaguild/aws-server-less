@@ -18,16 +18,16 @@ sample for aws server less architecture
    - `export ENDPOINT_URL={ServerLessApp.ServerLessApiEndpoint}`
    - `echo $ENDPOINT_URL`
  - select_data 
-   - `http GET "${ENDPOINT_URL}/api"`
+   - `https GET "${ENDPOINT_URL}api"`
  - create_data
 ```commandline
-http POST "${ENDPOINT_URL}/api" \
+https POST "${ENDPOINT_URL}api" \
 param_1="data1" \
 param_2="data2" \
 param_3="data3" \
 param_4="data4"
 ```
  - request patch
-   - `http POST "${ENDPOINT_URL}/api/{id}"`
+   - `https POST "${ENDPOINT_URL}api/{id}"`
  - requst delete
-   - `http DELETE "${ENDPOINT_URL}/api/{id}"`
+   - `https DELETE "${ENDPOINT_URL}api/{id}"`
