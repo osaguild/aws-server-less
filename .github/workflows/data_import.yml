@@ -21,7 +21,7 @@ jobs:
           python ./script/data_import.py
 
       - name: Check file
-        run: cat now.json
+        run: cat ./data/now.json
 
       - name: Create a pull request
         uses: peter-evans/create-pull-request@v3
