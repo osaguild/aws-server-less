@@ -1,5 +1,5 @@
 <template>
-  <div id="counter">
+  <div>
     <p>{{ users[0].id }}, {{ users[0].name }}</p>
     <p>{{ users[1].id }}, {{ users[1].name }}</p>
   </div>
