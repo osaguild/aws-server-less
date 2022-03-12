@@ -1,16 +1,15 @@
 <template>
   <div>
-    <p>{{ users[0].id }}, {{ users[0].name }}</p>
-    <p>{{ users[1].id }}, {{ users[1].name }}</p>
+    script worked at {{data.now}}
   </div>
 </template>
 
 <script>
-import Users from "../data/users"
+import Now from "../data/now.json"
 export default {
   data() {
     return {
-      users: Users
+      data: Now
     }
   }
 }
