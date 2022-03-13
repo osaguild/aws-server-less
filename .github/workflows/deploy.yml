@@ -1,4 +1,4 @@
-name: Deploy
+name: Deploy Script
 
 on:
   workflow_dispatch:
