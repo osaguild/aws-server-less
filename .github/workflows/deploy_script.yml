@@ -12,6 +12,11 @@ jobs:
         node-version: [16.x]
 
     steps:
+      - name: Set up
+        run: |
+        sudo apt update
+        sudo apt install tree
+
       - name: Check out
         uses: actions/checkout@v2
 
@@ -26,3 +31,6 @@ jobs:
 
       - name: Build
         run: npm run build --if-present
+
+      - name: Check
+        run: cat
