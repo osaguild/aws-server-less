@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  run-script:
+  deploy:
     runs-on: ubuntu-latest
 
     strategy:
@@ -25,4 +25,4 @@ jobs:
         run: npm ci
 
       - name: Build
-      - run: npm run build --if-present
+        run: npm run build --if-present
