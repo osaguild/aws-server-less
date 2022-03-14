@@ -1,4 +1,4 @@
-name: Deploy Script
+name: Production Deploy
 
 on:
   workflow_dispatch:
@@ -6,12 +6,13 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    environment:
+      name: prd
 
     strategy:
       matrix:
         node-version: [16.x]
         python-version: [3.9]
-        aws-region: [us-east-1]
 
     steps:
       - name: Set up Node.js ${{ matrix.node-version }}
@@ -45,13 +46,13 @@ jobs:
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: ${{ matrix.aws-region }}
+          AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
 
       - name: Invalidate CloudFront
         uses: chetan/invalidate-cloudfront-action@master
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: ${{ matrix.aws-region }}
+          AWS_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
           DISTRIBUTION: ${{ secrets.AWS_CF_DISTRIBUTION }}
           PATHS: '/*'
