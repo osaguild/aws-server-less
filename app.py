@@ -70,7 +70,7 @@ class ServerLess(core.Stack):
         # hosted zone
         hosted_zone=r53.HostedZone.from_lookup(
             self,"hosted-zone",
-            domain_name=DOMAIN,
+            domain_name="osaguild.com",
         )
 
         # certificate
@@ -226,19 +226,6 @@ class ServerLess(core.Stack):
         api_v1_serverless_id.add_method(
             "DELETE",
             apigw.LambdaIntegration(delete_data_lambda),
-        )
-
-        # store parameters in SSM
-        # todo: check why do I need parameter store?
-        ssm.StringParameter(
-            self, "TABLE_NAME",
-            parameter_name="TABLE_NAME",
-            string_value=table.table_name,
-        )
-        ssm.StringParameter(
-            self, "ENDPOINT_URL",
-            parameter_name="ENDPOINT_URL",
-            string_value=api.url,
         )
 
 app = core.App()

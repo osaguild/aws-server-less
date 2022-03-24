@@ -1,0 +1,10 @@
+{
+    "app": "python3 app.py",
+    "context": {
+        "TARGET": "prd",
+        "DOMAIN": "osaguild.com",
+        "FRONT_DOMAIN": "server-less.osaguild.com",
+        "API_DOMAIN": "api.osaguild.com",
+        "CERTIFICATE_DOMAIN": "*.osaguild.com"
+    }
+}
