@@ -7,7 +7,7 @@ sample for aws server less architecture
    - `source .env/bin/activate`
    - `pip install -r requirements.txt`
  - deploy
-   - `cdk deploy`
+   - `cdk deploy --require-approval never`
 
 ### How to use s3
  - access url

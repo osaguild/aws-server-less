@@ -14,34 +14,36 @@ from aws_cdk import (
 )
 import os
 
-class ServerLessApp(core.Stack):
+class ServerLess(core.Stack):
 
     def __init__(self, scope: core.App, name: str, **kwargs) -> None:
         super().__init__(scope, name, **kwargs)
 
         # dynamoDB
         table = ddb.Table(
-            self, "ServerLessTable",
+            self, "server-less-table",
             partition_key=ddb.Attribute(
                 name="id",
                 type=ddb.AttributeType.STRING
             ),
             billing_mode=ddb.BillingMode.PAY_PER_REQUEST,
-            removal_policy=core.RemovalPolicy.DESTROY
+            removal_policy=core.RemovalPolicy.DESTROY,
+            table_name="server-less-table-prd",
         )
 
         # s3 bucket
         bucket = s3.Bucket(
-            self, "ServerLessBucket",
+            self, "server-less-bucket",
             website_index_document="index.html",
             access_control=s3.BucketAccessControl.PRIVATE,
-            removal_policy=core.RemovalPolicy.DESTROY
+            removal_policy=core.RemovalPolicy.DESTROY,
+            bucket_name="server-less-bucket-prd",
         )
 
         # s3 access identity
         identity = cloudfront.OriginAccessIdentity(
-            self, "OriginAccessIdentity",
-            comment="s3 access identity",
+            self, "server-less-origin-access-identity",
+            comment="s3 access identity　prd",
         )
 
         # s3 policy statement
@@ -57,7 +59,7 @@ class ServerLessApp(core.Stack):
 
         # s3 deploy
         s3_deploy.BucketDeployment(
-            self, "BucketDeployment",
+            self, "server-less-bucket-deployment",
             destination_bucket=bucket,
             # deploy dir is ./dist
             sources=[s3_deploy.Source.asset("./dist")],
@@ -67,24 +69,24 @@ class ServerLessApp(core.Stack):
 
         # hosted zone
         hosted_zone=r53.HostedZone.from_lookup(
-            self,"HostedZone",
-            domain_name="osaguild.com"
+            self,"hosted-zone",
+            domain_name="osaguild.com",
         )
 
         # certificate
         certificate=acm.DnsValidatedCertificate(
-            self, "Certificate",
+            self, "certificate",
             domain_name="*.osaguild.com",
             subject_alternative_names=[
                 "*.osaguild.com"
             ],
             hosted_zone=hosted_zone,
-            region="us-east-1"
+            region="us-east-1",
         )
 
         # cloud front
         front = cloudfront.CloudFrontWebDistribution(
-            self, "ServerLessFront",
+            self, "server-less-front",
             default_root_object="index.html",
             viewer_protocol_policy=cloudfront.ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
             http_version=cloudfront.HttpVersion.HTTP2,
@@ -108,16 +110,17 @@ class ServerLessApp(core.Stack):
                 security_policy=cloudfront.SecurityPolicyProtocol.TLS_V1_2_2019,
                 ssl_method=cloudfront.SSLMethod.SNI
             ),
+            comment="server-less-front-prd",
         )
 
-        # A record for server-less-app
+        # A record for front
         app_a_record = r53.ARecord(
-            self, "AppARecord",
+            self, "front-a-record",
             record_name="server-less.osaguild.com",
             zone=hosted_zone,
             target=r53.RecordTarget.from_alias(
                 r53_targets.CloudFrontTarget(front)
-            )
+            ),
         )
 
         # common params for lambda
@@ -127,12 +130,12 @@ class ServerLessApp(core.Stack):
             # todo: anything else to add to env?
             "environment": {
                 "TABLE_NAME": table.table_name
-            }
+            },
         }
 
         # Lambda functions
         select_data_lambda = _lambda.Function(
-            self, "SelectData",
+            self, "select-data",
             # get code from api.py
             code=_lambda.Code.from_asset("api"),
             # method is select_data
@@ -141,24 +144,32 @@ class ServerLessApp(core.Stack):
             memory_size=512,
             timeout=core.Duration.seconds(10),
             **common_params,
+            function_name="server-less-lambda-select-data-prd",
+            description="server-less-lambda-prd",
         )
         create_data_lambda = _lambda.Function(
-            self, "CreateData",
+            self, "create-data",
             code=_lambda.Code.from_asset("api"),
             handler="api.create_data",
             **common_params,
+            function_name="server-less-lambda-create-data-prd",
+            description="server-less-lambda-prd",
         )
         update_data_lambda = _lambda.Function(
-            self, "UpdateData",
+            self, "update-data",
             code=_lambda.Code.from_asset("api"),
             handler="api.update_data",
             **common_params,
+            function_name="server-less-lambda-update-data-prd",
+            description="server-less-lambda-prd",
         )
         delete_data_lambda = _lambda.Function(
-            self, "DeleteData",
+            self, "delete-data",
             code=_lambda.Code.from_asset("api"),
             handler="api.delete_data",
             **common_params,
+            function_name="server-less-lambda-delete-data-prd",
+            description="server-less-lambda-prd",
         )
 
         # grant permissions
@@ -169,7 +180,7 @@ class ServerLessApp(core.Stack):
 
         # API Gateway
         api = apigw.RestApi(
-            self, "ServerLessApi",
+            self, "server-less-api",
             default_cors_preflight_options=apigw.CorsOptions(
                 # todo: restrict origins and methods
                 allow_origins=apigw.Cors.ALL_ORIGINS,
@@ -178,17 +189,18 @@ class ServerLessApp(core.Stack):
             domain_name=apigw.DomainNameOptions(
                 domain_name="api.osaguild.com",
                 certificate=certificate
-            )
+            ),
+            rest_api_name="server-less-api-prd",
         )
 
-        # A record for server-less-api
+        # A record for api
         api_a_record = r53.ARecord(
-            self, "ApiARecord",
+            self, "api-a-record",
             record_name="api.osaguild.com",
             zone=hosted_zone,
             target=r53.RecordTarget.from_alias(
                 r53_targets.ApiGateway(api)
-            )
+            ),
         )
 
         api_v1 = api.root.add_resource("v1")
@@ -197,12 +209,12 @@ class ServerLessApp(core.Stack):
         # add GET method to /api
         api_v1_serverless.add_method(
             "GET",
-            apigw.LambdaIntegration(select_data_lambda)
+            apigw.LambdaIntegration(select_data_lambda),
         )
         # add POST method to /api
         api_v1_serverless.add_method(
             "POST",
-            apigw.LambdaIntegration(create_data_lambda)
+            apigw.LambdaIntegration(create_data_lambda),
         )
 
         api_v1_serverless_id = api_v1_serverless.add_resource("{id}")
@@ -210,12 +222,12 @@ class ServerLessApp(core.Stack):
         # add POST method to /api/{id}
         api_v1_serverless_id.add_method(
             "POST",
-            apigw.LambdaIntegration(update_data_lambda)
+            apigw.LambdaIntegration(update_data_lambda),
         )
         # add DELETE method to /api/{id}
         api_v1_serverless_id.add_method(
             "DELETE",
-            apigw.LambdaIntegration(delete_data_lambda)
+            apigw.LambdaIntegration(delete_data_lambda),
         )
 
         # store parameters in SSM
@@ -223,25 +235,21 @@ class ServerLessApp(core.Stack):
         ssm.StringParameter(
             self, "TABLE_NAME",
             parameter_name="TABLE_NAME",
-            string_value=table.table_name
+            string_value=table.table_name,
         )
         ssm.StringParameter(
             self, "ENDPOINT_URL",
             parameter_name="ENDPOINT_URL",
-            string_value=api.url
+            string_value=api.url,
         )
 
-        # Output parameters
-        # check your bucket url and endpoint of api
-        core.CfnOutput(self, 'BucketUrl', value=bucket.bucket_website_domain_name)
-
 app = core.App()
-ServerLessApp(
-    app, "ServerLessApp",
+ServerLess(
+    app, "server-less-prd",
     env={
         "region": os.environ["CDK_DEFAULT_REGION"],
         "account": os.environ["CDK_DEFAULT_ACCOUNT"],
-    }
+    },
 )
 
 app.synth()
