@@ -15,7 +15,8 @@ sample for aws server less architecture
    - `source .env/bin/activate`
    - `pip install -r requirements.txt`
  - deploy
-   - `cdk deploy --require-approval never`
+   - `cdk deploy server-less-prd --require-approval never`
+   - if you deploy to dev. specify `server-less-dev`
 
 ### How to use front
  - access url
