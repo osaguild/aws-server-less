@@ -16,7 +16,7 @@ import os
 
 class ServerLess(core.Stack):
 
-    def __init__(self, scope: core.App, name: str, **kwargs) -> None:
+    def __init__(self, scope: core.App, name: str, CONTEXT: str, **kwargs) -> None:
         super().__init__(scope, name, **kwargs)
         
         # dynamoDB
@@ -28,7 +28,7 @@ class ServerLess(core.Stack):
             ),
             billing_mode=ddb.BillingMode.PAY_PER_REQUEST,
             removal_policy=core.RemovalPolicy.DESTROY,
-            table_name="server-less-table-" + TARGET,
+            table_name="server-less-table-" + CONTEXT["TARGET"],
         )
 
         # s3 bucket
@@ -37,13 +37,13 @@ class ServerLess(core.Stack):
             website_index_document="index.html",
             access_control=s3.BucketAccessControl.PRIVATE,
             removal_policy=core.RemovalPolicy.DESTROY,
-            bucket_name="server-less-bucket-" + TARGET,
+            bucket_name="server-less-bucket-" + CONTEXT["TARGET"],
         )
 
         # s3 access identity
         identity = cloudfront.OriginAccessIdentity(
             self, "server-less-origin-access-identity",
-            comment="s3 access identity　" + TARGET,
+            comment="s3 access identity " + CONTEXT["TARGET"],
         )
 
         # s3 policy statement
@@ -76,8 +76,8 @@ class ServerLess(core.Stack):
         # certificate
         certificate=acm.DnsValidatedCertificate(
             self, "certificate",
-            domain_name=CERTIFICATE_DOMAIN,
-            subject_alternative_names=[CERTIFICATE_DOMAIN],
+            domain_name=CONTEXT["CERTIFICATE_DOMAIN"],
+            subject_alternative_names=[CONTEXT["CERTIFICATE_DOMAIN"]],
             hosted_zone=hosted_zone,
             region="us-east-1",
         )
@@ -104,17 +104,17 @@ class ServerLess(core.Stack):
             ],
             viewer_certificate=cloudfront.ViewerCertificate.from_acm_certificate(
                 certificate,
-                aliases=[FRONT_DOMAIN],
+                aliases=[CONTEXT["FRONT_DOMAIN"]],
                 security_policy=cloudfront.SecurityPolicyProtocol.TLS_V1_2_2019,
                 ssl_method=cloudfront.SSLMethod.SNI
             ),
-            comment="server-less-front-" + TARGET,
+            comment="server-less-front-" + CONTEXT["TARGET"],
         )
 
         # A record for front
         front_a_record = r53.ARecord(
             self, "front-a-record",
-            record_name=FRONT_DOMAIN,
+            record_name=CONTEXT["FRONT_DOMAIN"],
             zone=hosted_zone,
             target=r53.RecordTarget.from_alias(
                 r53_targets.CloudFrontTarget(front)
@@ -142,32 +142,32 @@ class ServerLess(core.Stack):
             memory_size=512,
             timeout=core.Duration.seconds(10),
             **common_params,
-            function_name="server-less-lambda-select-data-" + TARGET,
-            description="server-less-lambda-" + TARGET,
+            function_name="server-less-lambda-select-data-" + CONTEXT["TARGET"],
+            description="server-less-lambda-" + CONTEXT["TARGET"],
         )
         create_data_lambda = _lambda.Function(
             self, "create-data",
             code=_lambda.Code.from_asset("api"),
             handler="api.create_data",
             **common_params,
-            function_name="server-less-lambda-create-data-" + TARGET,
-            description="server-less-lambda-" + TARGET,
+            function_name="server-less-lambda-create-data-" + CONTEXT["TARGET"],
+            description="server-less-lambda-" + CONTEXT["TARGET"],
         )
         update_data_lambda = _lambda.Function(
             self, "update-data",
             code=_lambda.Code.from_asset("api"),
             handler="api.update_data",
             **common_params,
-            function_name="server-less-lambda-update-data-" + TARGET,
-            description="server-less-lambda-" + TARGET,
+            function_name="server-less-lambda-update-data-" + CONTEXT["TARGET"],
+            description="server-less-lambda-" + CONTEXT["TARGET"],
         )
         delete_data_lambda = _lambda.Function(
             self, "delete-data",
             code=_lambda.Code.from_asset("api"),
             handler="api.delete_data",
             **common_params,
-            function_name="server-less-lambda-delete-data-" + TARGET,
-            description="server-less-lambda-" + TARGET,
+            function_name="server-less-lambda-delete-data-" + CONTEXT["TARGET"],
+            description="server-less-lambda-" + CONTEXT["TARGET"],
         )
 
         # grant permissions
@@ -185,16 +185,16 @@ class ServerLess(core.Stack):
                 allow_methods=apigw.Cors.ALL_METHODS,
             ),
             domain_name=apigw.DomainNameOptions(
-                domain_name=API_DOMAIN,
+                domain_name=CONTEXT["API_DOMAIN"],
                 certificate=certificate
             ),
-            rest_api_name="server-less-api-" + TARGET,
+            rest_api_name="server-less-api-" + CONTEXT["TARGET"],
         )
 
         # A record for api
         api_a_record = r53.ARecord(
             self, "api-a-record",
-            record_name=API_DOMAIN,
+            record_name=CONTEXT["API_DOMAIN"],
             zone=hosted_zone,
             target=r53.RecordTarget.from_alias(
                 r53_targets.ApiGateway(api)
@@ -230,19 +230,22 @@ class ServerLess(core.Stack):
 
 app = core.App()
 
-# set context
-TARGET = app.node.try_get_context("TARGET")
-DOMAIN = app.node.try_get_context("DOMAIN")
-FRONT_DOMAIN = app.node.try_get_context("FRONT_DOMAIN")
-API_DOMAIN = app.node.try_get_context("API_DOMAIN")
-CERTIFICATE_DOMAIN = app.node.try_get_context("CERTIFICATE_DOMAIN")
-
 ServerLess(
-    app, "server-less-" + TARGET,
+    app, "server-less-prd",
     env={
         "region": os.environ["CDK_DEFAULT_REGION"],
         "account": os.environ["CDK_DEFAULT_ACCOUNT"],
     },
+    CONTEXT=app.node.try_get_context("prd"),
+)
+
+ServerLess(
+    app, "server-less-dev",
+    env={
+        "region": os.environ["CDK_DEFAULT_REGION"],
+        "account": os.environ["CDK_DEFAULT_ACCOUNT"],
+    },
+    CONTEXT=app.node.try_get_context("dev"),
 )
 
 app.synth()

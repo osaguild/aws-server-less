@@ -1,10 +1,19 @@
 {
     "app": "python3 app.py",
     "context": {
-        "TARGET": "prd",
-        "DOMAIN": "osaguild.com",
-        "FRONT_DOMAIN": "server-less.osaguild.com",
-        "API_DOMAIN": "api.osaguild.com",
-        "CERTIFICATE_DOMAIN": "*.osaguild.com"
+        "prd": {
+            "TARGET": "prd",
+            "DOMAIN": "osaguild.com",
+            "FRONT_DOMAIN": "server-less.osaguild.com",
+            "API_DOMAIN": "api.osaguild.com",
+            "CERTIFICATE_DOMAIN": "*.osaguild.com"    
+        },
+        "dev": {
+            "TARGET": "dev",
+            "DOMAIN": "dev.osaguild.com",
+            "FRONT_DOMAIN": "server-less.dev.osaguild.com",
+            "API_DOMAIN": "api.dev.osaguild.com",
+            "CERTIFICATE_DOMAIN": "*.dev.osaguild.com"
+        }
     }
 }
