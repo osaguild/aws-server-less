@@ -1,6 +1,14 @@
 # aws-server-less
 sample for aws server less architecture
 
+### endpoint
+ - dev
+   - front:`https://server-less.dev.osaguild.com`
+   - api:`https://api.dev.osaguild.com/server-less`
+ - prd
+   - front:`https://server-less.osaguild.com`
+   - api:`https://api.osaguild.com/server-less`
+
 ### How to deploy
  - venv
    - `python3 -m venv .env`
@@ -9,7 +17,7 @@ sample for aws server less architecture
  - deploy
    - `cdk deploy --require-approval never`
 
-### How to use s3
+### How to use front
  - access url
    - `https://server-less.osaguild.com`
 
