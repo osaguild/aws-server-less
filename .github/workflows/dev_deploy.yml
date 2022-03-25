@@ -7,7 +7,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     environment:
-      name: prd
+      name: dev
 
     strategy:
       matrix:
